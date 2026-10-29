@@ -236,6 +236,46 @@ POST /api/generate/img2img/banana (Gemini 图生图) → 500 Internal Server Err
 
 → App 的"兜底智能"链路（`gpt-3.5-turbo` 写脚本、Gemini 生成 prompt）同样已失效。
 
+
+### 6.6 算力拓扑直接暴露（最强判死证据）
+
+同族（proxglobal 系）惯例：`GET /api/v1/transfer/config` 会吐出全部算力地址。
+
+```bash
+curl -s http://69.10.54.174:8005/api/v1/transfer/config
+# → CONST.txt2img_turbo / CONST.img2img_urls / STYLES{50 个风格}.service_urls
+```
+
+实测拿到（原文存 `evidence/transfer_config_compute.json`，36,744 B）：
+
+| 用途 | 地址 |
+|---|---|
+| txt2img turbo | `https://1a8nzg21h42bv3-8002.proxy.runpod.net/generate_sync/` |
+| img2img ×3 负载 | `https://hqhfk2z3uedo3d-8040/8041/8042.proxy.runpod.net/sdapi/v1/img2img` |
+
+四个 RunPod pod 逐个探活：**`404` + 响应体 **0 字节****。
+这正是同族案（PicGo v2.0.8）定下的"pod 已销毁"硬指纹（冷启动会挂起或 502，权限问题是 403 带 body）。
+→ **推理层是真的没了，不是限流、不是鉴权、不是冷启动。**
+
+附带结论：
+- `STYLES` 里有 **50** 个风格（`/api/v1.0/style_list` 只暴露 14 个），50 个风格共用这 3 个 img2img pod
+  → 验证 3 个 pod 就等于验证了全部风格，不用逐个试。
+- `GET /api/v1/transfer/list_styles` 返回完整 50 个名字，可用于建风格目录（数据面仍活）。
+
+### 6.7 Bearer token 不是准入闸门（三态对照实验）
+
+同一合法 body 打 `/api/v2.0/generator/txt2img`，只改 Authorization：
+
+| Authorization | 结果 |
+|---|---|
+| `Bearer <合法 JWT>` | `200 {"msg":"Finish","content":{"image_url":null}}` 2.25 s |
+| 不带 Authorization | `200 {"msg":"Finish","content":{"image_url":null}}` 1.16 s |
+| `Bearer deadbeef` | `200 {"msg":"Finish","content":{"image_url":null}}` 1.03 s |
+
+三者**完全一致** → 当前 token 只是装饰品，不是门禁。
+（保留意义：算力复活后它可能承担配额归属，`client` 里仍按规范续签；但不能把"能签 token"
+当成"渠道可用"的证据。）
+
 ---
 
 ## 7. 一个高危发现：Remote Config 可匿名读取
