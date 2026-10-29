@@ -33,6 +33,7 @@ python stress_test.py --upstream          # 输出直接贴到下面表格
 | `aiart-api.nowtechai.com/api/monitor` | `total=235, success=0`，`last_success_time=null` | 2026-10-30 |
 | RunPod 算力 pod ×4（`/api/v1/transfer/config` 泄露） | 全部 `404` + **0 字节** = pod 已销毁 | 2026-10-30 |
 | 生成端点 Bearer 三态对照 | 合法/不带/乱填 token 返回**完全一致** → token 非门禁 | 2026-10-30 |
+| token 端点 hash 校验 | `{"content":"x","hash":"x"}` 在 v2.0 与 v3 都能签出 JWT → **hash 不校验** | 2026-10-30 |
 | OpenAI 池（RC `config_api_key`，294 个） | 抽样 8 个 → `401 account deactivated` | 2026-10-30 |
 | Gemini（RC `config_api_key_gemini`） | `403 projects/324322657249 suspended` | 2026-10-30 |
 
