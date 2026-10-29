@@ -1,0 +1,48 @@
+{
+ "ts": "2026-10-30T05:50:46",
+ "base": "http://127.0.0.1:8951",
+ "load": [
+  {
+   "total": 100,
+   "concurrency": 4,
+   "wall_s": 2.09,
+   "throughput_rps": 47.83,
+   "success": 100,
+   "success_rate": 100.0,
+   "codes": {
+    "200": 100
+   },
+   "client_errors": {},
+   "latency_s": {
+    "min": 0.026,
+    "p50": 0.037,
+    "p95": 0.054,
+    "p99": 1.185,
+    "max": 1.187,
+    "mean": 0.083
+   },
+   "bytes_mean": 28264
+  },
+  {
+   "total": 100,
+   "concurrency": 8,
+   "wall_s": 0.82,
+   "throughput_rps": 121.33,
+   "success": 100,
+   "success_rate": 100.0,
+   "codes": {
+    "200": 100
+   },
+   "client_errors": {},
+   "latency_s": {
+    "min": 0.041,
+    "p50": 0.062,
+    "p95": 0.082,
+    "p99": 0.085,
+    "max": 0.096,
+    "mean": 0.064
+   },
+   "bytes_mean": 28278
+  }
+ ]
+}

@@ -1,0 +1,42 @@
+{
+ "ts": "2026-10-30T05:51:32",
+ "base": "http://127.0.0.1:8951",
+ "upstream": {
+  "hash_formula": {
+   "server": "0e136fedde7b2e7fcb69eb1fd76c5486379fe5add67faa8af15506c045b6b960",
+   "local": "0e136fedde7b2e7fcb69eb1fd76c5486379fe5add67faa8af15506c045b6b960",
+   "match": true
+  },
+  "token": "ok eyJhbGciOiJIUzI1…",
+  "txt2img_v2": {
+   "msg": "Finish",
+   "ok": false,
+   "elapsed": 1.53
+  },
+  "img2img_v2": {
+   "msg": "Finish",
+   "ok": false,
+   "elapsed": 0.92
+  },
+  "qr_art_v2": {
+   "msg": "Finish",
+   "ok": true,
+   "elapsed": 1.01
+  },
+  "style_list": {
+   "ok": true,
+   "count": 14,
+   "elapsed": 0.78
+  },
+  "static_styles": {
+   "ok": true,
+   "count": 2,
+   "elapsed": 2.26
+  },
+  "static_video": {
+   "ok": true,
+   "count": 2,
+   "elapsed": 0.92
+  }
+ }
+}

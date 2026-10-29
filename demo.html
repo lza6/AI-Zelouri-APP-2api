@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Zelouri 2API · 本地演示台</title>
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#141821; --panel2:#1b2130; --line:#242c3d;
+    --txt:#e8ecf4; --dim:#8b97ad; --acc:#7c5cff; --acc2:#22d3ee; --ok:#34d399; --warn:#fbbf24; --err:#f87171;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.55 -apple-system,"Segoe UI",system-ui,"Microsoft YaHei",sans-serif;
+       background:radial-gradient(1200px 600px at 15% -10%,#1b1f35 0%,var(--bg) 55%);color:var(--txt);min-height:100vh}
+  header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+         background:rgba(11,13,18,.7);backdrop-filter:blur(8px);position:sticky;top:0;z-index:9}
+  h1{font-size:16px;margin:0;letter-spacing:.3px}
+  h1 span{color:var(--acc2)}
+  .badge{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+  .badge.mock{color:var(--warn);border-color:#5a4410;background:#241c07}
+  .badge.real{color:var(--ok);border-color:#12452f;background:#07231a}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;padding:18px 22px 60px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  label{display:block;font-size:12px;color:var(--dim);margin:12px 0 6px}
+  textarea,input,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+       border-radius:9px;padding:9px 11px;font:inherit;outline:none}
+  textarea{resize:vertical;min-height:88px}
+  textarea:focus,input:focus,select:focus{border-color:var(--acc)}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  button{cursor:pointer;border:none;border-radius:10px;padding:11px 16px;font:600 14px/1 inherit;
+         background:linear-gradient(135deg,var(--acc),#4f46e5);color:#fff;transition:.15s}
+  button:hover{filter:brightness(1.12)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-weight:500}
+  .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin-top:12px}
+  .meta b{color:var(--txt);font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .shot{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .shot img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover;background:#0e1118}
+  .shot .cap{padding:8px 10px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
+  .empty{border:1px dashed var(--line);border-radius:14px;padding:56px 20px;text-align:center;color:var(--dim)}
+  pre{background:#0a0c11;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;
+      font:12px/1.5 ui-monospace,Consolas,monospace;color:#a9b6cc;max-height:300px;margin:12px 0 0}
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;
+           display:inline-block;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin-top:12px}
+  .kpi div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .kpi span{display:block;font-size:11px;color:var(--dim)}
+  .kpi b{font-size:16px}
+</style>
+</head>
+<body>
+<header>
+  <h1>AI Zelouri 1.9.6 → <span>2API</span> 本地演示台</h1>
+  <span class="badge" id="modeBadge">mode: …</span>
+  <span class="badge" id="upBadge">upstream: …</span>
+  <span style="flex:1"></span>
+  <button class="ghost" id="probeBtn">探活上游</button>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <label>提示词 prompt</label>
+    <textarea id="prompt">a red apple on a rustic wooden table, soft morning light, shallow depth of field</textarea>
+
+    <label>风格 style_name（来自线上风格表）</label>
+    <select id="style"><option value="">（无 / 纯 prompt）</option></select>
+
+    <div class="row">
+      <div>
+        <label>尺寸</label>
+        <select id="size">
+          <option>512x512</option><option>512x768</option>
+          <option>768x512</option><option>768x768</option>
+        </select>
+      </div>
+      <div>
+        <label>张数 n</label>
+        <select id="n"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div><label>steps</label><input id="steps" type="number" value="20" min="1" max="50"></div>
+      <div><label>cfg</label><input id="cfg" type="number" value="7" min="1" max="20"></div>
+    </div>
+
+    <label>参考图（可选 → 走图生图 /v1/images/edits）</label>
+    <input id="refImg" type="file" accept="image/*">
+
+    <div style="margin-top:16px"><button id="go" style="width:100%">生成</button></div>
+
+    <div class="kpi">
+      <div><span>耗时</span><b id="kLat">—</b></div>
+      <div><span>来源</span><b id="kSrc">—</b></div>
+      <div><span>张数</span><b id="kCnt">—</b></div>
+    </div>
+
+    <pre id="log">就绪。上游生成算力当前已下线，auto 模式会自动回落 mock 并在来源标注 mock。</pre>
+  </div>
+
+  <div>
+    <div class="grid" id="out">
+      <div class="empty" style="grid-column:1/-1">还没有结果 —— 点「生成」。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = location.origin;
+
+function log(t){ const el=$('#log'); el.textContent = t + '\n' + el.textContent; }
+
+async function boot(){
+  try{
+    const h = await (await fetch('/healthz')).json();
+    $('#modeBadge').textContent = 'mode: ' + h.mode;
+    $('#modeBadge').className = 'badge ' + (h.mode==='mock'?'mock':'real');
+  }catch(e){ log('healthz 失败: '+e); }
+  try{
+    const s = await (await fetch('/api/styles')).json();
+    const sel = $('#style');
+    (s.styles||[]).forEach(st=>{
+      const o=document.createElement('option');
+      o.value=st.name; o.textContent=st.name;
+      sel.appendChild(o);
+    });
+    $('#upBadge').textContent = `styles: ${s.count} (${s.source})`;
+  }catch(e){ $('#upBadge').textContent='styles: 不可用'; }
+}
+
+async function probe(){
+  $('#probeBtn').disabled = true;
+  log('探活中…');
+  try{
+    const d = await (await fetch('/api/upstream-probe')).json();
+    log('探活结果:\n' + JSON.stringify(d, null, 2));
+    $('#upBadge').textContent = 'upstream: ' + (d.txt2img_v2 && d.txt2img_v2.ok ? '可出图' : '无产物');
+  }catch(e){ log('探活失败: '+e); }
+  $('#probeBtn').disabled = false;
+}
+
+async function generate(){
+  const btn=$('#go'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>生成中…';
+  const t0=performance.now();
+  try{
+    const file = $('#refImg').files[0];
+    let res;
+    if(file){
+      const fd = new FormData();
+      fd.append('image', file);
+      fd.append('prompt', $('#prompt').value);
+      fd.append('style', $('#style').value);
+      fd.append('n', $('#n').value);
+      fd.append('size', $('#size').value);
+      fd.append('steps', $('#steps').value);
+      res = await fetch('/v1/images/edits', {method:'POST', body:fd});
+    }else{
+      res = await fetch('/v1/images/generations', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          prompt: $('#prompt').value,
+          style: $('#style').value || null,
+          n: +$('#n').value,
+          size: $('#size').value,
+          steps: +$('#steps').value,
+          cfg_scale: +$('#cfg').value,
+          response_format: 'b64_json'
+        })
+      });
+    }
+    const ms = Math.round(performance.now()-t0);
+    const src = res.headers.get('X-Zelouri-Source') || '?';
+    if(!res.ok){ log(`HTTP ${res.status}: ` + (await res.text()).slice(0,400)); return; }
+    const d = await res.json();
+    const out = $('#out'); out.innerHTML='';
+    let i=0;
+    for(const item of d.data){
+      const card=document.createElement('div'); card.className='shot';
+      const img=document.createElement('img');
+      img.src = item.b64_json ? 'data:image/png;base64,'+item.b64_json : item.url;
+      const cap=document.createElement('div'); cap.className='cap';
+      cap.innerHTML = `<span>#${++i} ${$('#size').value}</span><span>${src}</span>`;
+      card.append(img,cap); out.appendChild(card);
+    }
+    $('#kLat').textContent = ms+'ms';
+    $('#kSrc').textContent = src;
+    $('#kCnt').textContent = d.data.length;
+    log(`OK ${ms}ms source=${src} n=${d.data.length}`);
+  }catch(e){ log('生成异常: '+e); }
+  finally{ btn.disabled=false; btn.textContent='生成'; }
+}
+
+$('#go').onclick = generate;
+$('#probeBtn').onclick = probe;
+boot();
+</script>
+</body>
+</html>
